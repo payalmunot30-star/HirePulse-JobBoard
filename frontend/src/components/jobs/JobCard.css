@@ -1,0 +1,415 @@
+/* ==========================================================================
+   HirePulse Job Card - Clean Professional Recruitment UI
+   Matches Reference Design: Full-width Banner, Overlapping Logo, Clean Layout
+   ========================================================================== */
+
+/* 1. Outer Card Container */
+.hp-job-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  height: 100%;
+}
+
+.hp-job-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+/* 2. Banner Wrapper (100% Full-Width) */
+.hp-banner-container {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  height: 160px;
+}
+
+/* Inner media wrapper to clip top-left & top-right corners matching card */
+.hp-banner-media-wrapper {
+  width: 100%;
+  height: 100%;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  background-color: #1a1a1a;
+}
+
+.hp-banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Default Banner with Desk & Typography */
+.hp-default-banner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #111827;
+  overflow: hidden;
+}
+
+.hp-banner-overlay-typography {
+  position: absolute;
+  top: 50%;
+  right: 140px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hp-banner-script {
+  font-family: 'Dancing Script', 'Caveat', 'Playfair Display', cursive;
+  font-size: 26px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  line-height: 1.15;
+}
+
+.hp-banner-subtext {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 8.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+  letter-spacing: 2.8px;
+  text-transform: uppercase;
+  margin-top: 3px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+/* 3. Floating Company Logo Container (Overlaps Banner Bottom-Right) */
+.hp-logo-container {
+  position: absolute;
+  right: 40px;
+  bottom: -35px;
+  z-index: 5;
+  width: 85px;
+  height: 85px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.09);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hp-job-card:hover .hp-logo-container {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.hp-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* 4. Card Content Area (Generous Top Padding to Clear Overlapping Logo) */
+.hp-card-content {
+  padding: 40px 24px 24px 24px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Top Row: 'Multiple openings' Badge */
+.hp-top-badge-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.65rem;
+}
+
+.hp-badge-openings {
+  display: inline-block;
+  background-color: #eff6ff;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0.32rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #dbeafe;
+  letter-spacing: 0.1px;
+}
+
+/* Main Info Row (Details on Left, Action Controls on Right) */
+.hp-main-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.hp-job-details {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Job Title */
+.hp-job-title {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #0f172a;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 0.35rem;
+  transition: color 0.15s ease;
+  word-break: break-word;
+}
+
+.hp-job-title:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* Company Name */
+.hp-company-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.35rem;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+/* Location */
+.hp-location {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 14.5px;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+.hp-location-icon {
+  flex-shrink: 0;
+  color: #64748b;
+}
+
+/* Action Controls (Bookmark & Dislike stacked vertically) */
+.hp-action-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.hp-job-action-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: #64748b;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.hp-job-action-btn:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  transform: scale(1.05);
+}
+
+.hp-job-action-btn.bookmarked {
+  color: #2563eb;
+}
+
+/* 5. Pills Row (Tags & Salary) */
+.hp-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.hp-pill-tag {
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 0.38rem 0.9rem;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.2;
+}
+
+.hp-pill-tag.hp-pill-salary {
+  font-weight: 600;
+  color: #15803d;
+  background-color: #eaf7ee;
+  border-color: #bbf7d0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* 6. Activity / Insights Box (Matching Reference Bottom Container) */
+.hp-activity-box {
+  background-color: #f4f8fd;
+  border: 1px solid #e0ecfc;
+  border-radius: 12px;
+  padding: 0.85rem 1.15rem;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  box-sizing: border-box;
+}
+
+.hp-activity-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #1e293b;
+  line-height: 1.3;
+}
+
+.hp-activity-icon {
+  flex-shrink: 0;
+  color: #1e293b;
+}
+
+/* 7. Disliked / Hidden State */
+.hp-job-card-disliked {
+  opacity: 0.65;
+  background-color: #f8fafc;
+}
+
+.hp-job-card-hidden-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  min-height: 220px;
+  color: #64748b;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   Responsive Adaptations
+   ========================================================================== */
+
+/* Tablet (<= 992px) */
+@media (max-width: 992px) {
+  .hp-banner-container {
+    height: 145px;
+  }
+
+  .hp-logo-container {
+    width: 78px;
+    height: 78px;
+    right: 30px;
+    bottom: -32px;
+  }
+
+  .hp-card-content {
+    padding: 38px 20px 20px 20px;
+  }
+
+  .hp-banner-overlay-typography {
+    right: 120px;
+  }
+
+  .hp-banner-script {
+    font-size: 22px;
+  }
+
+  .hp-banner-subtext {
+    font-size: 8px;
+    letter-spacing: 2px;
+  }
+}
+
+/* Mobile (<= 640px) */
+@media (max-width: 640px) {
+  .hp-banner-container {
+    height: 130px;
+  }
+
+  .hp-logo-container {
+    width: 68px;
+    height: 68px;
+    right: 16px;
+    bottom: -28px;
+    border-radius: 10px;
+    padding: 6px;
+  }
+
+  .hp-card-content {
+    padding: 34px 16px 16px 16px;
+  }
+
+  .hp-job-title {
+    font-size: 19px;
+  }
+
+  .hp-company-name {
+    font-size: 15px;
+  }
+
+  .hp-banner-overlay-typography {
+    right: 94px;
+  }
+
+  .hp-banner-script {
+    font-size: 18px;
+  }
+
+  .hp-banner-subtext {
+    font-size: 7px;
+    letter-spacing: 1.5px;
+  }
+
+  .hp-pill-tag {
+    font-size: 12.5px;
+    padding: 0.32rem 0.75rem;
+  }
+
+  .hp-activity-box {
+    padding: 0.75rem 0.95rem;
+  }
+
+  .hp-activity-item {
+    font-size: 12.5px;
+  }
+}
