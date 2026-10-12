@@ -112,29 +112,37 @@ class JobCreateUpdateSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
     def validate_salary_min(self, value):
-        if value is not None and value < 0:
-            raise serializers.ValidationError('Minimum salary cannot be negative.')
+        if value is not None:
+            if value < 0:
+                raise serializers.ValidationError('Minimum salary cannot be negative.')
+            if value > 1_000_000_000:
+                raise serializers.ValidationError('Minimum salary cannot exceed ₹100 Crores.')
         return value
 
     def validate_salary_max(self, value):
-        if value is not None and value < 0:
-            raise serializers.ValidationError('Maximum salary cannot be negative.')
+        if value is not None:
+            if value < 0:
+                raise serializers.ValidationError('Maximum salary cannot be negative.')
+            if value > 1_000_000_000:
+                raise serializers.ValidationError('Maximum salary cannot exceed ₹100 Crores.')
+        return value
+
+    def validate_closing_date(self, value):
+        from django.utils import timezone
+        if value and value < timezone.now().date():
+            raise serializers.ValidationError('Closing date cannot be set in the past.')
         return value
 
     def validate(self, attrs):
         salary_min = attrs.get('salary_min')
         salary_max = attrs.get('salary_max')
         if salary_min is not None and salary_min < 0:
-            raise serializers.ValidationError({
-                'salary_min': 'Minimum salary cannot be negative.',
-            })
+            raise serializers.ValidationError({'salary_min': 'Minimum salary cannot be negative.'})
         if salary_max is not None and salary_max < 0:
-            raise serializers.ValidationError({
-                'salary_max': 'Maximum salary cannot be negative.',
-            })
+            raise serializers.ValidationError({'salary_max': 'Maximum salary cannot be negative.'})
         if salary_min is not None and salary_max is not None and salary_min > salary_max:
             raise serializers.ValidationError({
-                'salary_max': 'Maximum salary must be greater than or equal to minimum salary.',
+                'salary_max': 'Maximum salary must be greater than or equal to minimum salary.'
             })
         return attrs
 

@@ -9,15 +9,20 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework import serializers
 
+from django.db import transaction
 from .models import User, CandidateProfile, RecruiterProfile
 from .validators import validate_pdf_resume
+from .services import AccountService
 
 
 def validate_indian_phone(value):
-    """Validate Indian 10-digit phone number and format as +91XXXXXXXXXX."""
+    """
+    Validate Indian 10-digit mobile number and format as +91XXXXXXXXXX.
+    Ensures standard Indian mobile prefix (starts with 6, 7, 8, or 9).
+    """
     if not value or not str(value).strip():
         return ""
-    
+
     cleaned = re.sub(r'[\s\-\(\)]', '', str(value).strip())
     if cleaned.startswith('+91'):
         digits = cleaned[3:]
@@ -26,20 +31,18 @@ def validate_indian_phone(value):
     else:
         digits = cleaned
 
-    if not re.match(r'^\d{10}$', digits):
+    if not re.match(r'^[6-9]\d{9}$', digits):
         raise serializers.ValidationError(
-            'Please enter a valid 10-digit Indian phone number.'
+            'Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.'
         )
     return f"+91{digits}"
 
 
-
-# ==============================================================================
-# AUTH SERIALIZERS
-# ==============================================================================
-
 class RegisterSerializer(serializers.ModelSerializer):
-    """Serializer for user registration."""
+    """
+    Registration serializer supporting separate candidate and recruiter workflows.
+    Recruiter registration accepts and stores company branding attributes atomically.
+    """
     password = serializers.CharField(
         write_only=True,
         min_length=8,
@@ -50,34 +53,100 @@ class RegisterSerializer(serializers.ModelSerializer):
         write_only=True,
         style={'input_type': 'password'},
     )
+    role = serializers.ChoiceField(
+        choices=[(User.Role.CANDIDATE, 'Candidate'), (User.Role.RECRUITER, 'Recruiter')],
+        default=User.Role.CANDIDATE,
+    )
+    phone = serializers.CharField(
+        max_length=20,
+        required=False,
+        allow_blank=True,
+    )
+    company_name = serializers.CharField(
+        max_length=255,
+        required=False,
+        allow_blank=True,
+        trim_whitespace=True,
+    )
+    company_website = serializers.URLField(
+        max_length=500,
+        required=False,
+        allow_blank=True,
+    )
+    position = serializers.CharField(
+        max_length=255,
+        required=False,
+        allow_blank=True,
+        trim_whitespace=True,
+    )
+    company_location = serializers.CharField(
+        max_length=255,
+        required=False,
+        allow_blank=True,
+        trim_whitespace=True,
+    )
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'first_name', 'last_name',
             'role', 'password', 'password_confirm',
+            'phone', 'company_name', 'company_website',
+            'position', 'company_location',
         ]
         read_only_fields = ['id']
 
+    def validate_first_name(self, value):
+        val = value.strip()
+        if len(val) < 2:
+            raise serializers.ValidationError('First name must be at least 2 characters long.')
+        if not re.match(r"^[a-zA-Z\s\-']+$", val):
+            raise serializers.ValidationError('First name should contain only alphabetical characters.')
+        return val
+
+    def validate_last_name(self, value):
+        val = value.strip()
+        if len(val) < 1:
+            raise serializers.ValidationError('Last name cannot be empty.')
+        if not re.match(r"^[a-zA-Z\s\-']+$", val):
+            raise serializers.ValidationError('Last name should contain only alphabetical characters.')
+        return val
+
+    def validate_email(self, value):
+        email = value.lower().strip()
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError('An account with this email address already exists.')
+        return email
+
+    def validate_phone(self, value):
+        return validate_indian_phone(value)
+
     def validate_role(self, value):
-        """Public registration can only create candidate accounts."""
-        if value and value != User.Role.CANDIDATE:
-            raise serializers.ValidationError(
-                'Registration is only available for candidates. Recruiter accounts must be created by an administrator.'
-            )
-        return User.Role.CANDIDATE
+        if value not in (User.Role.CANDIDATE, User.Role.RECRUITER):
+            raise serializers.ValidationError('Public registration is only available for Candidates and Recruiters.')
+        return value
 
     def validate(self, attrs):
-        if attrs['password'] != attrs['password_confirm']:
-            raise serializers.ValidationError(
-                {'password_confirm': 'Passwords do not match.'}
-            )
+        if attrs.get('password') != attrs.get('password_confirm'):
+            raise serializers.ValidationError({'password_confirm': 'Passwords do not match.'})
+
+        role = attrs.get('role', User.Role.CANDIDATE)
+        if role == User.Role.RECRUITER:
+            company_name = attrs.get('company_name', '').strip()
+            if not company_name:
+                raise serializers.ValidationError({
+                    'company_name': 'Company name is required for recruiter registration.'
+                })
+            if len(company_name) < 2:
+                raise serializers.ValidationError({
+                    'company_name': 'Company name must be at least 2 characters long.'
+                })
+
         return attrs
 
     def create(self, validated_data):
         validated_data.pop('password_confirm', None)
-        validated_data['role'] = User.Role.CANDIDATE
-        return User.objects.create_user(**validated_data)
+        return AccountService.register_user(validated_data)
 
 
 class LoginSerializer(serializers.Serializer):
@@ -191,21 +260,23 @@ class ChangePasswordSerializer(serializers.Serializer):
         return user
 
 
-# ==============================================================================
-# USER SERIALIZERS
-# ==============================================================================
-
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer for user data (read)."""
+    """Core serializer for authenticated user profiles and basic metadata."""
     full_name = serializers.CharField(source='get_full_name', read_only=True)
+    company_name = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'first_name', 'last_name', 'full_name',
-            'role', 'is_active', 'created_at', 'updated_at',
+            'role', 'company_name', 'is_active', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'email', 'role', 'created_at', 'updated_at']
+
+    def get_company_name(self, obj):
+        if obj.role == User.Role.RECRUITER and hasattr(obj, 'recruiter_profile'):
+            return obj.recruiter_profile.company_name or ''
+        return ''
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
@@ -248,65 +319,6 @@ class AdminRecruiterSerializer(serializers.ModelSerializer):
             'role', 'is_active', 'company_name', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'role', 'created_at', 'updated_at']
-
-
-class AdminCreateRecruiterSerializer(serializers.Serializer):
-    """Serializer for admin creating a new recruiter account."""
-    full_name = serializers.CharField(max_length=255, required=True)
-    email = serializers.EmailField(required=True)
-    password = serializers.CharField(
-        write_only=True,
-        min_length=8,
-        validators=[validate_password],
-        style={'input_type': 'password'},
-    )
-    password_confirm = serializers.CharField(
-        write_only=True,
-        style={'input_type': 'password'},
-    )
-    company_name = serializers.CharField(
-        max_length=255,
-        required=False,
-        allow_blank=True,
-        default='',
-    )
-
-    def validate_email(self, value):
-        normalized = value.lower().strip()
-        if User.objects.filter(email=normalized).exists():
-            raise serializers.ValidationError('A user with this email already exists.')
-        return normalized
-
-    def validate(self, attrs):
-        if attrs['password'] != attrs['password_confirm']:
-            raise serializers.ValidationError(
-                {'password_confirm': 'Passwords do not match.'}
-            )
-        return attrs
-
-    def create(self, validated_data):
-        full_name = validated_data.pop('full_name', '').strip()
-        parts = full_name.split(None, 1)
-        first_name = parts[0] if parts else ''
-        last_name = parts[1] if len(parts) > 1 else ''
-
-        email = validated_data['email']
-        password = validated_data['password']
-        company_name = validated_data.get('company_name', '').strip() or f"{full_name}'s Organization"
-
-        user = User.objects.create_user(
-            email=email,
-            password=password,
-            first_name=first_name,
-            last_name=last_name,
-            role=User.Role.RECRUITER,
-        )
-
-        profile, _ = RecruiterProfile.objects.get_or_create(user=user)
-        profile.company_name = company_name
-        profile.save()
-
-        return user
 
 
 # ==============================================================================

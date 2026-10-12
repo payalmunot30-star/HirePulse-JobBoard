@@ -34,7 +34,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-insecure-dev-key-change-me}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-hirepulse-dev-secret-key-2026}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend,frontend}
       DB_NAME: ${DB_NAME:-job_portal}
@@ -48,7 +48,7 @@ services:
       EMAIL_USE_TLS: ${EMAIL_USE_TLS:-True}
       EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
       EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
-      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-noreply@jobportal.com}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-noreply@hirepulse.com}
     depends_on:
       postgres:
         condition: service_healthy

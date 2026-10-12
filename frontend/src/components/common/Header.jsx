@@ -590,6 +590,11 @@ export const Header = () => {
             /* ──────────────── 4. PUBLIC NAVBAR (Unchanged) ──────────────── */
             <>
               <li>
+                <Link to="/register?role=recruiter" className="nav-link" style={{ fontWeight: 600, color: 'var(--primary)' }}>
+                  Employers / Post Job
+                </Link>
+              </li>
+              <li>
                 <Link to="/login" className="nav-link">
                   Log In
                 </Link>

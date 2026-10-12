@@ -113,7 +113,10 @@ export const CandidateOnboarding = () => {
         if (parsed.locationCity) setLocationCity(parsed.locationCity.replace(/[^a-zA-Z\s,.'-]/g, ''));
         if (parsed.postcode) setPostcode(parsed.postcode.replace(/\D/g, ''));
         if (parsed.remoteInterested !== undefined) setRemoteInterested(parsed.remoteInterested);
-        if (parsed.minPay) setMinPay(parsed.minPay);
+        if (parsed.minPay) {
+          const cleanPay = String(parsed.minPay).replace(/\D/g, '');
+          if (cleanPay) setMinPay(cleanPay);
+        }
         if (parsed.payPeriod) setPayPeriod(parsed.payPeriod);
         if (parsed.selectedJobTypes) setSelectedJobTypes(parsed.selectedJobTypes);
         if (parsed.jobTitles) setJobTitles(parsed.jobTitles);
@@ -250,6 +253,42 @@ export const CandidateOnboarding = () => {
     setPostcode(filtered);
   };
 
+  // Handlers for Minimum Base Pay (Disallow negative values, symbols, exponential signs)
+  const handleMinPayKeyDown = (e) => {
+    if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E' || e.key === '.') {
+      e.preventDefault();
+    }
+  };
+
+  const handleMinPayPaste = (e) => {
+    const pasteData = e.clipboardData.getData('text');
+    if (pasteData.includes('-') || isNaN(Number(pasteData)) || Number(pasteData) < 0) {
+      e.preventDefault();
+      showToast('Minimum base pay must be a positive number.', 'warning');
+    }
+  };
+
+  const handleMinPayChange = (e) => {
+    const val = e.target.value;
+    if (val === '') {
+      setMinPay('');
+      return;
+    }
+    const num = parseFloat(val);
+    if (!isNaN(num)) {
+      if (num < 0 || val.includes('-')) {
+        setMinPay('');
+        showToast('Minimum base pay cannot be negative.', 'warning');
+      } else {
+        const cleaned = val.replace(/\D/g, '');
+        setMinPay(cleaned);
+      }
+    } else {
+      const cleaned = val.replace(/\D/g, '');
+      setMinPay(cleaned);
+    }
+  };
+
   const handleNext = () => {
     if (currentStep === 1) {
       // Validation for location
@@ -262,9 +301,28 @@ export const CandidateOnboarding = () => {
         showToast('City, State must be in words only (letters and spaces, no numbers).', 'error');
         return;
       }
-      if (postcode.trim() && !/^\d+$/.test(postcode.trim())) {
-        showToast('Postcode must be numeric only.', 'error');
-        return;
+      if (postcode.trim()) {
+        if (!/^[1-9][0-9]{5}$/.test(postcode.trim())) {
+          showToast('Please enter a valid 6-digit Indian PIN code (e.g. 400001).', 'error');
+          return;
+        }
+      }
+    }
+    if (currentStep === 2) {
+      if (minPay !== '' && minPay !== null && minPay !== undefined) {
+        const payNum = Number(minPay);
+        if (isNaN(payNum) || payNum < 0) {
+          showToast('Minimum base pay cannot be negative.', 'error');
+          return;
+        }
+        if (payNum === 0 || payNum < 1000) {
+          showToast('Minimum base pay must be at least ₹1,000.', 'error');
+          return;
+        }
+        if (payNum > 100000000) {
+          showToast('Minimum base pay cannot exceed ₹10 Crores.', 'error');
+          return;
+        }
       }
     }
     if (currentStep === 4 && jobTitles.length === 0 && titleInput.trim()) {
@@ -500,10 +558,14 @@ export const CandidateOnboarding = () => {
                 <span className="onboarding-currency-symbol">₹</span>
                 <input
                   type="number"
+                  min="0"
+                  step="1"
                   className="onboarding-input onboarding-currency-input"
                   placeholder="e.g. 500000"
                   value={minPay}
-                  onChange={(e) => setMinPay(e.target.value)}
+                  onChange={handleMinPayChange}
+                  onKeyDown={handleMinPayKeyDown}
+                  onPaste={handleMinPayPaste}
                   autoFocus
                 />
               </div>

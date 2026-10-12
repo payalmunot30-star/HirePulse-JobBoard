@@ -47,11 +47,6 @@ export const candidateService = {
     return response.data;
   },
 
-  async createRecruiter(data) {
-    const response = await api.post('/users/recruiters/', data);
-    return response.data;
-  },
-
   async updateUserStatus(userId, is_active) {
     const response = await api.patch(`/users/${userId}/`, { is_active });
     return response.data;

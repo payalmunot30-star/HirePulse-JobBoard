@@ -138,6 +138,20 @@ class Job(models.Model):
             models.Index(fields=['experience_level', 'status']),
         ]
 
+    def clean(self):
+        super().clean()
+        from django.core.exceptions import ValidationError
+        from django.utils import timezone
+
+        if self.salary_min is not None and self.salary_min < 0:
+            raise ValidationError({'salary_min': 'Minimum salary cannot be negative.'})
+        if self.salary_max is not None and self.salary_max < 0:
+            raise ValidationError({'salary_max': 'Maximum salary cannot be negative.'})
+        if self.salary_min is not None and self.salary_max is not None and self.salary_min > self.salary_max:
+            raise ValidationError({'salary_max': 'Maximum salary cannot be less than minimum salary.'})
+        if self.closing_date and self.closing_date < timezone.now().date():
+            raise ValidationError({'closing_date': 'Closing date cannot be set in the past.'})
+
     def __str__(self):
         return f"{self.title} at {self.recruiter.company_name}"
 

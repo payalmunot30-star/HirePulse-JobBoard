@@ -7,7 +7,9 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+from django.db.models import Q
 from rest_framework import generics, permissions, status, serializers
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,7 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('accounts.views')
 
 from .models import User, CandidateProfile, RecruiterProfile
 from .permissions import IsAdmin, IsRecruiterOrAdmin
@@ -28,17 +30,13 @@ from .serializers import (
     UserSerializer,
     AdminUserSerializer,
     AdminRecruiterSerializer,
-    AdminCreateRecruiterSerializer,
     CandidateProfileSerializer,
     CandidateProfileUpdateSerializer,
     RecruiterProfileSerializer,
     RecruiterProfileUpdateSerializer,
 )
 
-
-# ==============================================================================
-# AUTH VIEWS
-# ==============================================================================
+# Authentication & Session Handlers
 
 @extend_schema(tags=['Auth'])
 class RegisterView(generics.CreateAPIView):
@@ -217,13 +215,11 @@ class MeView(APIView):
         return Response(data)
 
 
-# ==============================================================================
-# USER MANAGEMENT VIEWS
-# ==============================================================================
+# Administration & User Moderation Endpoints
 
 @extend_schema(tags=['Users'])
 class UserListView(generics.ListAPIView):
-    """List all users (admin only)."""
+    """List all registered users (admin only)."""
     serializer_class = AdminUserSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
     queryset = User.objects.all()
@@ -234,7 +230,7 @@ class UserListView(generics.ListAPIView):
 
 @extend_schema(tags=['Users'])
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """View, update, or delete a user (admin only)."""
+    """View, update, or deactivate a user account (admin only)."""
     serializer_class = AdminUserSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
     queryset = User.objects.all()
@@ -246,30 +242,21 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 @extend_schema(tags=['Users'])
-class AdminRecruiterListCreateView(generics.ListCreateAPIView):
-    """List recruiters or create a new recruiter account (admin only)."""
+class AdminRecruiterListView(generics.ListAPIView):
+    """List recruiters (admin only). Dedicated recruiter creation endpoint has been removed."""
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
+    serializer_class = AdminRecruiterSerializer
     queryset = User.objects.filter(role=User.Role.RECRUITER).select_related('recruiter_profile').order_by('-created_at')
     filterset_fields = ['is_active']
     search_fields = ['email', 'first_name', 'last_name', 'recruiter_profile__company_name']
     ordering_fields = ['created_at', 'email', 'first_name']
 
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return AdminCreateRecruiterSerializer
-        return AdminRecruiterSerializer
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        read_serializer = AdminRecruiterSerializer(user, context={'request': request})
-        return Response(read_serializer.data, status=status.HTTP_201_CREATED)
+# Backward-compatibility alias
+AdminRecruiterListCreateView = AdminRecruiterListView
 
 
-# ==============================================================================
-# PROFILE VIEWS
-# ==============================================================================
+# Profile Lifecycle & Search Endpoints
 
 @extend_schema(tags=['Users'])
 class CandidateProfileView(generics.RetrieveUpdateAPIView):
@@ -283,7 +270,10 @@ class CandidateProfileView(generics.RetrieveUpdateAPIView):
         return CandidateProfileSerializer
 
     def get_object(self):
-        profile, _ = CandidateProfile.objects.get_or_create(user=self.request.user)
+        user = self.request.user
+        if not getattr(user, 'is_candidate', False):
+            raise PermissionDenied('Only candidates can access candidate profiles.')
+        profile, _ = CandidateProfile.objects.get_or_create(user=user)
         return profile
 
 
@@ -299,7 +289,10 @@ class RecruiterProfileView(generics.RetrieveUpdateAPIView):
         return RecruiterProfileSerializer
 
     def get_object(self):
-        profile, _ = RecruiterProfile.objects.get_or_create(user=self.request.user)
+        user = self.request.user
+        if not getattr(user, 'is_recruiter', False):
+            raise PermissionDenied('Only recruiters can access recruiter profiles.')
+        profile, _ = RecruiterProfile.objects.get_or_create(user=user)
         return profile
 
     def update(self, request, *args, **kwargs):
@@ -325,10 +318,10 @@ class CandidateListView(generics.ListAPIView):
 
         if search:
             queryset = queryset.filter(
-                models.Q(user__first_name__icontains=search) |
-                models.Q(user__last_name__icontains=search) |
-                models.Q(user__email__icontains=search) |
-                models.Q(bio__icontains=search)
+                Q(user__first_name__icontains=search) |
+                Q(user__last_name__icontains=search) |
+                Q(user__email__icontains=search) |
+                Q(bio__icontains=search)
             )
 
         if skills:

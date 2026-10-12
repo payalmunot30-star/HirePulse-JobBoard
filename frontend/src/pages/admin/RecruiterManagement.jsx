@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { candidateService } from '../../services/candidate.service';
 import { useToast } from '../../context/ToastContext';
-import { Search, UserPlus, Building, Mail, Calendar, CheckCircle, XCircle, ShieldCheck, Trash2 } from 'lucide-react';
+import { Search, Building, Mail, Calendar, CheckCircle, XCircle, ShieldCheck, Trash2 } from 'lucide-react';
 import { formatTitle, formatCompanyName } from '../../utils/formatters';
 
 export const RecruiterManagement = () => {
@@ -101,14 +100,6 @@ export const RecruiterManagement = () => {
             Admin-only management for authorized recruiter accounts and hiring entities
           </p>
         </div>
-
-        <Link
-          to="/admin/recruiters/add"
-          className="btn btn-primary"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <UserPlus size={18} /> Add Recruiter
-        </Link>
       </div>
 
       {/* Mini Stats Banner */}
@@ -312,14 +303,11 @@ export const RecruiterManagement = () => {
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
               No Recruiters Found
             </h3>
-            <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
+            <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', margin: '0 auto' }}>
               {search || statusFilter
                 ? 'No recruiter accounts match the specified filters.'
                 : 'There are currently no recruiter accounts registered in the platform.'}
             </p>
-            <Link to="/admin/recruiters/add" className="btn btn-primary">
-              <UserPlus size={16} /> Add First Recruiter
-            </Link>
           </div>
         )}
       </div>

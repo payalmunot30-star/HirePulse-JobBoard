@@ -80,7 +80,7 @@ HirePulse features **25 verified routes** registered in `frontend/src/App.jsx`, 
 ### A. Public Pages (Accessible to All)
 1. **Home (`/`)**: High-converting landing page featuring the hero search bar, live platform statistics (active jobs, companies, candidates), categorized industry cards, and featured positions.
 2. **Login (`/login`)**: Universal login form supporting all roles. Issues JWT `access` and `refresh` tokens and automatically redirects to the appropriate role dashboard.
-3. **Register (`/register`)**: Candidate registration form creating user credentials and initial candidate profile.
+3. **Register (`/register` & `/register?role=recruiter`)**: Dual-flow registration system supporting separate Candidate and Recruiter onboarding workflows. Candidates enter contact details and advance to onboarding, while Recruiters register company branding, designation, location, and website to immediately access employer tools.
 4. **Forgot Password (`/forgot-password`)**: Requests a password reset link sent to the user's email address.
 5. **Reset Password (`/reset-password`)**: Form to validate reset tokens and set a new password.
 6. **Reset Password with Token (`/reset-password/:uid/:token`)**: Direct email link handler for password recovery.

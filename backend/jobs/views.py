@@ -178,8 +178,8 @@ def close_job(request, pk):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    job.status = Job.Status.CLOSED
-    job.save()
+    from .services import JobService
+    JobService.close_job(job)
     return Response({
         'message': 'Job closed successfully.',
         'job': JobListSerializer(job, context={'request': request}).data,

@@ -36,7 +36,6 @@ import { CandidateSearch } from './pages/recruiter/CandidateSearch';
 // Admin Pages
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { RecruiterManagement } from './pages/admin/RecruiterManagement';
-import { AddRecruiter } from './pages/admin/AddRecruiter';
 import { UserManagement } from './pages/admin/UserManagement';
 import { JobManagement } from './pages/admin/JobManagement';
 import { HiringOverview } from './pages/admin/HiringOverview';
@@ -75,7 +74,6 @@ const DashboardWrapper = ({ children }) => {
     if (path.includes('/recruiter/candidates')) return { title: 'Candidate Search', profile: '/recruiter/profile' };
     if (path.includes('/recruiter/profile')) return { title: 'Company Profile', profile: '/recruiter/profile' };
     if (path.includes('/admin/dashboard')) return { title: 'Platform Analytics', profile: '/admin/users' };
-    if (path.includes('/admin/recruiters/add')) return { title: 'Add Recruiter', profile: '/admin/users' };
     if (path.includes('/admin/recruiters')) return { title: 'Recruiters', profile: '/admin/users' };
     if (path.includes('/admin/users')) return { title: 'User Management', profile: '/admin/users' };
     if (path.includes('/admin/jobs')) return { title: 'All Job Postings', profile: '/admin/users' };
@@ -271,14 +269,6 @@ function AppRoutes() {
                   element={
                     <ProtectedRoute roles={['admin']}>
                       <DashboardWrapper><RecruiterManagement /></DashboardWrapper>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/recruiters/add"
-                  element={
-                    <ProtectedRoute roles={['admin']}>
-                      <DashboardWrapper><AddRecruiter /></DashboardWrapper>
                     </ProtectedRoute>
                   }
                 />

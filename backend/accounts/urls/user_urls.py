@@ -4,7 +4,7 @@ from django.urls import path
 from accounts.views import (
     UserListView,
     UserDetailView,
-    AdminRecruiterListCreateView,
+    AdminRecruiterListView,
     CandidateProfileView,
     RecruiterProfileView,
     CandidateListView,
@@ -14,7 +14,7 @@ from accounts.views import (
 urlpatterns = [
     # Admin user & recruiter management
     path('', UserListView.as_view(), name='user-list'),
-    path('recruiters/', AdminRecruiterListCreateView.as_view(), name='admin-recruiter-list-create'),
+    path('recruiters/', AdminRecruiterListView.as_view(), name='admin-recruiter-list'),
     path('<int:pk>/', UserDetailView.as_view(), name='user-detail'),
 
     # Profile management

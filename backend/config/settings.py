@@ -1,34 +1,25 @@
 """
-Django settings for Job Portal project.
-
-Environment variables are loaded via python-decouple.
+Django settings for the HirePulse Recruitment Management & Job Portal platform.
+Configuration values are loaded securely via python-decouple.
 """
-import os
 from datetime import timedelta
 from pathlib import Path
-
 from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ==============================================================================
-# CORE SETTINGS
-# ==============================================================================
-
-SECRET_KEY = config('DJANGO_SECRET_KEY', default='insecure-dev-key-change-me')
+# Core Security & Environment Settings
+SECRET_KEY = config('DJANGO_SECRET_KEY', default='django-insecure-hirepulse-dev-secret-key-2026')
 DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='*', cast=Csv())
 if '*' not in ALLOWED_HOSTS:
-    for h in ['localhost', '127.0.0.1', 'backend', 'frontend', '0.0.0.0']:
-        if h not in ALLOWED_HOSTS:
-            ALLOWED_HOSTS.append(h)
+    for host in ['localhost', '127.0.0.1', 'backend', 'frontend', '0.0.0.0']:
+        if host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(host)
 
-# ==============================================================================
-# APPLICATION DEFINITION
-# ==============================================================================
-
+# Installed Applications
 DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -36,7 +27,7 @@ DJANGO_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.postgres',  # PostgreSQL full-text search
+    'django.contrib.postgres',
 ]
 
 THIRD_PARTY_APPS = [
@@ -58,10 +49,7 @@ LOCAL_APPS = [
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
-# ==============================================================================
-# MIDDLEWARE
-# ==============================================================================
-
+# Request/Response Middleware Pipeline
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -93,10 +81,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# ==============================================================================
-# DATABASE
-# ==============================================================================
-
+# Database Configuration (PostgreSQL with Full-Text Search)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -108,10 +93,7 @@ DATABASES = {
     }
 }
 
-# ==============================================================================
-# AUTHENTICATION
-# ==============================================================================
-
+# User Model & Password Validation
 AUTH_USER_MODEL = 'accounts.User'
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -121,19 +103,13 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# ==============================================================================
-# INTERNATIONALIZATION
-# ==============================================================================
-
+# Localization & Timezone
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
-# ==============================================================================
-# STATIC & MEDIA FILES
-# ==============================================================================
-
+# Static & Media Asset Storage
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
@@ -142,10 +118,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ==============================================================================
-# DJANGO REST FRAMEWORK
-# ==============================================================================
-
+# Django REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -166,15 +139,12 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',
-        'user': '1000/hour',
+        'anon': '120/hour',
+        'user': '1200/hour',
     },
 }
 
-# ==============================================================================
-# JWT SETTINGS
-# ==============================================================================
-
+# SimpleJWT Token Lifecycle
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(
         minutes=config('JWT_ACCESS_TOKEN_LIFETIME_MINUTES', default=60, cast=int)
@@ -189,10 +159,7 @@ SIMPLE_JWT = {
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
 
-# ==============================================================================
-# CORS SETTINGS
-# ==============================================================================
-
+# Cross-Origin Resource Sharing (CORS)
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
@@ -202,10 +169,7 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-# ==============================================================================
-# EMAIL SETTINGS
-# ==============================================================================
-
+# Mail Dispatch Service
 EMAIL_BACKEND = config(
     'EMAIL_BACKEND',
     default='django.core.mail.backends.console.EmailBackend'
@@ -215,12 +179,9 @@ EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@jobportal.com')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='HirePulse <noreply@hirepulse.com>')
 
-# ==============================================================================
-# FILE UPLOAD SETTINGS
-# ==============================================================================
-
+# Document Upload Limits & Constraints
 MAX_RESUME_SIZE_MB = config('MAX_RESUME_SIZE_MB', default=5, cast=int)
 MAX_RESUME_SIZE_BYTES = MAX_RESUME_SIZE_MB * 1024 * 1024
 ALLOWED_RESUME_TYPES = [
@@ -228,22 +189,54 @@ ALLOWED_RESUME_TYPES = [
 ]
 ALLOWED_RESUME_EXTENSIONS = ['.pdf']
 
-# ==============================================================================
-# DRF SPECTACULAR (API DOCUMENTATION)
-# ==============================================================================
+# Structured Application Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} [{name}:{lineno}] {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'accounts': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'jobs': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'applications': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
 
+# drf-spectacular (OpenAPI 3.0 Documentation)
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Job Portal API',
-    'DESCRIPTION': 'A professional recruitment management system API',
+    'TITLE': 'HirePulse Recruitment & Talent API',
+    'DESCRIPTION': 'HirePulse Enterprise Recruitment Management, Candidate Tracking, and Job Portal API',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
     'TAGS': [
-        {'name': 'Auth', 'description': 'Authentication & registration'},
-        {'name': 'Users', 'description': 'User & profile management'},
-        {'name': 'Jobs', 'description': 'Job posting management'},
-        {'name': 'Applications', 'description': 'Job application workflow'},
-        {'name': 'Notifications', 'description': 'Notification management'},
-        {'name': 'Dashboard', 'description': 'Dashboard & analytics'},
+        {'name': 'Auth', 'description': 'Authentication & dual-role registration'},
+        {'name': 'Users', 'description': 'User and talent profile management'},
+        {'name': 'Jobs', 'description': 'Job opening lifecycle and search'},
+        {'name': 'Applications', 'description': 'Application pipeline and status transitions'},
+        {'name': 'Notifications', 'description': 'User activity and status alerts'},
+        {'name': 'Dashboard', 'description': 'Recruiter and admin hiring analytics'},
     ],
 }

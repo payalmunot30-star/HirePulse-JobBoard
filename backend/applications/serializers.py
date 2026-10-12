@@ -120,23 +120,22 @@ class ApplicationDetailSerializer(serializers.ModelSerializer):
 
 
 class ApplicationStatusUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for recruiters to update application status."""
+    """Serializer for recruiters to update application status adhering to stage workflow rules."""
 
     class Meta:
         model = Application
         fields = ['status']
 
+    def validate_status(self, value):
+        instance = self.instance
+        if instance:
+            from .services import ApplicationService
+            ApplicationService.validate_transition(instance.status, value)
+        return value
+
     def update(self, instance, validated_data):
-        old_status = instance.status
-        new_status = validated_data.get('status', old_status)
-        instance.status = new_status
-        instance.save()
-
-        if old_status != new_status:
-            send_application_status_notification(
-                application=instance,
-                old_status=old_status,
-                new_status=new_status,
-            )
-
-        return instance
+        from .services import ApplicationService
+        request = self.context.get('request')
+        new_status = validated_data.get('status', instance.status)
+        actor = request.user if request else instance.job.recruiter.user
+        return ApplicationService.update_status(instance, new_status, actor)

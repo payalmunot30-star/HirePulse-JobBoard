@@ -300,6 +300,19 @@ export const CandidateProfile = () => {
       formattedPhone = `+91${digits}`;
     }
 
+    // Validate education graduation years (4-digit numeric year)
+    for (let i = 0; i < education.length; i++) {
+      const edu = education[i];
+      if (edu.year && edu.year.toString().trim()) {
+        const yr = Number(edu.year);
+        const curYear = new Date().getFullYear();
+        if (isNaN(yr) || yr < 1970 || yr > curYear + 6) {
+          showToast(`Please enter a valid 4-digit graduation year between 1970 and ${curYear + 6} for education entry #${i + 1}.`, 'error');
+          return;
+        }
+      }
+    }
+
     if (resumeFile) {
       const validation = validatePdfFile(resumeFile);
       if (!validation.valid) {
@@ -1215,6 +1228,87 @@ export const CandidateProfile = () => {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Education History */}
+        <div className="card" style={{ marginBottom: '2rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1rem',
+            }}
+          >
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Education History</h3>
+            <button
+              type="button"
+              onClick={handleAddEducation}
+              className="btn btn-secondary btn-sm"
+              id="add-education-btn"
+            >
+              <Plus size={16} /> Add Degree / School
+            </button>
+          </div>
+
+          {education.length === 0 ? (
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontStyle: 'italic', marginBottom: 0 }}>
+              No education entries added yet. Click &quot;Add Degree / School&quot; to list your educational qualifications.
+            </p>
+          ) : (
+            education.map((edu, idx) => (
+              <div
+                key={idx}
+                style={{
+                  padding: '1rem',
+                  backgroundColor: 'var(--bg-surface)',
+                  borderRadius: 'var(--border-radius-sm)',
+                  marginBottom: '1rem',
+                  border: '1px solid var(--border-color)',
+                }}
+              >
+                <div className="grid-2" style={{ marginBottom: '0.75rem' }}>
+                  <input
+                    type="text"
+                    placeholder="Degree / Qualification (e.g. B.Tech Computer Science)"
+                    className="form-control"
+                    value={edu.degree || ''}
+                    onChange={(e) => handleEducationChange(idx, 'degree', e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Institution / University (e.g. Pune University)"
+                    className="form-control"
+                    value={edu.institution || ''}
+                    onChange={(e) => handleEducationChange(idx, 'institution', e.target.value)}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <input
+                    type="number"
+                    placeholder="Graduation Year (e.g. 2024)"
+                    className="form-control"
+                    min="1970"
+                    max={new Date().getFullYear() + 6}
+                    value={edu.year || ''}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                      handleEducationChange(idx, 'year', val);
+                    }}
+                    style={{ maxWidth: '240px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveEducation(idx)}
+                    className="btn btn-danger btn-sm"
+                    title="Remove entry"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Action Buttons */}
